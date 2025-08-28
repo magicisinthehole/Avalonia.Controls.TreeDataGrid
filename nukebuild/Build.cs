@@ -18,8 +18,6 @@ using static Nuke.Common.Tools.VSWhere.VSWhereTasks;
 
 partial class Build : NukeBuild
 {
-    [Solution("Avalonia.Controls.TreeDataGrid.sln")] readonly Solution Solution;
-
     static Lazy<string> MsBuildExe = new Lazy<string>(() =>
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
