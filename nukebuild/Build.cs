@@ -18,25 +18,6 @@ using static Nuke.Common.Tools.VSWhere.VSWhereTasks;
 
 partial class Build : NukeBuild
 {
-    static Lazy<string> MsBuildExe = new Lazy<string>(() =>
-    {
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return null;
-
-        var msBuildDirectory = VSWhere("-latest -nologo -property installationPath -format value -prerelease").FirstOrDefault().Text;
-
-        if (!string.IsNullOrWhiteSpace(msBuildDirectory))
-        {
-            string msBuildExe = Path.Combine(msBuildDirectory, @"MSBuild\Current\Bin\MSBuild.exe");
-            if (!System.IO.File.Exists(msBuildExe))
-                msBuildExe = Path.Combine(msBuildDirectory, @"MSBuild\15.0\Bin\MSBuild.exe");
-
-            return msBuildExe;
-        }
-
-        return null;
-    }, false);
-
     BuildParameters Parameters { get; set; }
     protected override void OnBuildInitialized()
     {
@@ -44,7 +25,7 @@ partial class Build : NukeBuild
         Information("Building version {0} of Avalonia.Controls.TreeDataGrid ({1}) using version {2} of Nuke.",
             Parameters.Version,
             Parameters.Configuration,
-            typeof(NukeBuild).Assembly.GetName().Version.ToString());
+            typeof(NukeBuild).Assembly.GetName()?.Version?.ToString());
 
         if (Parameters.IsLocalBuild)
         {
@@ -67,27 +48,10 @@ partial class Build : NukeBuild
         void ExecWait(string preamble, string command, string args)
         {
             Console.WriteLine(preamble);
-            Process.Start(new ProcessStartInfo(command, args) {UseShellExecute = false}).WaitForExit();
+            Process.Start(new ProcessStartInfo(command, args) {UseShellExecute = false})?.WaitForExit();
         }
         ExecWait("dotnet version:", "dotnet", "--info");
         ExecWait("dotnet workloads:", "dotnet", "workload list");
-    }
-
-    IReadOnlyCollection<Output> MsBuildCommon(
-        string projectFile,
-        Configure<MSBuildSettings> configurator = null)
-    {
-        return MSBuild(c => c
-            .SetProjectFile(projectFile)
-            // This is required for VS2019 image on Azure Pipelines
-            .When(_ => Parameters.IsRunningOnWindows && Parameters.IsRunningOnAzure, _ => _
-                .AddProperty("JavaSdkDirectory", GetVariable<string>("JAVA_HOME_11_X64")))
-            .AddProperty("PackageVersion", Parameters.Version)
-            .AddProperty("iOSRoslynPathHackRequired", true)
-            .SetProcessToolPath(MsBuildExe.Value)
-            .SetConfiguration(Parameters.Configuration)
-            .SetVerbosity(MSBuildVerbosity.Minimal)
-            .Apply(configurator));
     }
 
     Target Clean => _ => _.Executes(() =>
@@ -105,18 +69,11 @@ partial class Build : NukeBuild
         .DependsOn(Clean)
         .Executes(() =>
         {
-            if (Parameters.IsRunningOnWindows)
-                MsBuildCommon(Parameters.MSBuildSolution, c => c
-                    .SetProcessAdditionalArguments("/r")
-                    .AddTargets("Build")
-                );
-
-            else
-                DotNetBuild(c => c
-                    .SetProjectFile(Parameters.MSBuildSolution)
-                    .AddProperty("PackageVersion", Parameters.Version)
-                    .SetConfiguration(Parameters.Configuration)
-                );
+            DotNetBuild(c => c
+                .SetProjectFile(Parameters.MSBuildSolution)
+                .AddProperty("PackageVersion", Parameters.Version)
+                .SetConfiguration(Parameters.Configuration)
+            );
         });
 
     Target RunCoreLibsTests => _ => _
@@ -163,15 +120,10 @@ partial class Build : NukeBuild
         .After(RunTests)
         .Executes(() =>
         {
-            if (Parameters.IsRunningOnWindows)
-
-                MsBuildCommon(Parameters.MSBuildSolution, c => c
-                    .AddTargets("Pack"));
-            else
-                DotNetPack(c => c
-                    .SetProject(Parameters.MSBuildSolution)
-                    .SetConfiguration(Parameters.Configuration)
-                    .AddProperty("PackageVersion", Parameters.Version));
+            DotNetPack(c => c
+                .SetProject(Parameters.MSBuildSolution)
+                .SetConfiguration(Parameters.Configuration)
+                .AddProperty("PackageVersion", Parameters.Version));
         });
 
     Target RunTests => _ => _
@@ -196,12 +148,4 @@ partial class Build : NukeBuild
         RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? Execute<Build>(x => x.Package)
             : Execute<Build>(x => x.RunTests);
-}
-
-public static class ToolSettingsExtensions
-{
-    public static T Apply<T>(this T settings, Configure<T> configurator)
-    {
-        return configurator != null ? configurator(settings) : settings;
-    }
 }
