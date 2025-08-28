@@ -11,13 +11,13 @@ steps:
 - task: UseDotNet@2
   displayName: 'Use .NET SDK'
   inputs:
-    version: 8.0.x
+    version: 9.0.x
 
 - task: CmdLine@2
   displayName: 'Install Nuke'
   inputs:
     script: |
-      dotnet tool install --global Nuke.GlobalTool --version 6.0.3
+      dotnet tool install --global Nuke.GlobalTool --version 9.0.4
 
 - script: nuke --target RunTests --configuration Release
   displayName: 'Run Unit Tests'

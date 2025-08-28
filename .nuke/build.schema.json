@@ -122,10 +122,6 @@
         "SkipTests": {
           "type": "boolean",
           "description": "skip-tests"
-        },
-        "Solution": {
-          "type": "string",
-          "description": "Path to a solution file that is automatically loaded. Default is Avalonia.Controls.TreeDataGrid.sln"
         }
       }
     },
