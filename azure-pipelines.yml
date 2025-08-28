@@ -13,10 +13,10 @@ steps:
   inputs:
     version: 9.0.x
 
-- script: dotnet run --project ${{github.workspace}}/nukebuild/_build.csproj -- RunTests --configuration Release
+- script: dotnet run --project $(Build.SourcesDirectory)/nukebuild/_build.csproj -- RunTests --configuration Release
   displayName: 'Run Unit Tests'
 
-- script: dotnet run --project ${{github.workspace}}/nukebuild/_build.csproj -- Package --configuration Release
+- script: dotnet run --project $(Build.SourcesDirectory)/nukebuild/_build.csproj -- Package --configuration Release
   displayName: 'Generate Nuget Package'
 
 - task: PublishBuildArtifacts@1
