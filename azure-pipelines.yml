@@ -13,16 +13,10 @@ steps:
   inputs:
     version: 9.0.x
 
-- task: CmdLine@2
-  displayName: 'Install Nuke'
-  inputs:
-    script: |
-      dotnet tool install --global Nuke.GlobalTool --version 9.0.4
-
-- script: nuke --target RunTests --configuration Release
+- script: dotnet run --project ${{github.workspace}}/nukebuild/_build.csproj -- RunTests --configuration Release
   displayName: 'Run Unit Tests'
 
-- script: nuke --target Package --configuration Release
+- script: dotnet run --project ${{github.workspace}}/nukebuild/_build.csproj -- Package --configuration Release
   displayName: 'Generate Nuget Package'
 
 - task: PublishBuildArtifacts@1
