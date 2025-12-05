@@ -20,7 +20,7 @@ namespace Avalonia.Controls
     {
         private IEnumerable<TModel> _items;
         private TreeDataGridItemsSourceView<TModel> _itemsView;
-        private AnonymousSortableRows<TModel>? _rows;
+        private IRows? _rows;
         private IComparer<TModel>? _comparer;
         private ITreeDataGridSelection? _selection;
         private bool _isSelectionSet;
@@ -45,7 +45,7 @@ namespace Avalonia.Controls
                 {
                     _items = value;
                     _itemsView = TreeDataGridItemsSourceView<TModel>.GetOrCreate(value);
-                    _rows?.SetItems(_itemsView);
+                    SetRowItems(_itemsView);
                     if (_selection is object)
                         _selection.Source = value;
                     RaisePropertyChanged();
@@ -85,7 +85,7 @@ namespace Avalonia.Controls
 
         public void Dispose()
         {
-            _rows?.Dispose();
+            (_rows as IDisposable)?.Dispose();
             GC.SuppressFinalize(this);
         }
 
@@ -147,7 +147,7 @@ namespace Avalonia.Controls
                 if (comparer is not null)
                 {
                     _comparer = comparer is not null ? new FuncComparer<TModel>(comparer) : null;
-                    _rows?.Sort(_comparer);
+                    SortRows(_comparer);
                     Sorted?.Invoke();
                     foreach (var c in Columns)
                         c.SortDirection = c == column ? direction : null;
@@ -163,9 +163,21 @@ namespace Avalonia.Controls
             return Enumerable.Empty<object>();
         }
 
-        private AnonymousSortableRows<TModel> CreateRows()
+        private IRows CreateRows()
         {
             return new AnonymousSortableRows<TModel>(_itemsView, _comparer);
+        }
+
+        private void SetRowItems(TreeDataGridItemsSourceView<TModel> items)
+        {
+            if (_rows is AnonymousSortableRows<TModel> anonymousRows)
+                anonymousRows.SetItems(items);
+        }
+
+        private void SortRows(IComparer<TModel>? comparer)
+        {
+            if (_rows is AnonymousSortableRows<TModel> anonymousRows)
+                anonymousRows.Sort(comparer);
         }
     }
 }

@@ -193,7 +193,7 @@ namespace Avalonia.Controls.Primitives
             {
                 PseudoClasses.Set(":selected", IsSelected);
             }
-            
+
             base.OnPropertyChanged(change);
         }
 

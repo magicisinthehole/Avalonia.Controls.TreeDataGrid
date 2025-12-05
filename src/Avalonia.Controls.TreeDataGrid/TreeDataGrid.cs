@@ -449,7 +449,7 @@ namespace Avalonia.Controls
             }
         }
 
-        internal void RaiseRowDragStarted(PointerEventArgs trigger)
+        internal async void RaiseRowDragStarted(PointerEventArgs trigger)
         {
             if (_source is null || RowSelection is null)
                 return;
@@ -469,10 +469,15 @@ namespace Avalonia.Controls
 
             if (allowedEffects != DragDropEffects.None)
             {
-                var data = new DataObject();
+                var data = new DataTransfer();
                 var info = new DragInfo(_source, RowSelection.SelectedIndexes.ToList());
-                data.Set(DragInfo.DataFormat, info);
-                DragDrop.DoDragDrop(trigger, data, allowedEffects);
+                var dragId = info.Register();
+                var item = new DataTransferItem();
+                item.Set(DragInfo.DragFormat, dragId);
+                data.Add(item);
+                await DragDrop.DoDragDropAsync(trigger, data, allowedEffects);
+                // Clean up if drag was cancelled
+                DragInfo.Cleanup(dragId);
             }
         }
 
@@ -612,8 +617,23 @@ namespace Avalonia.Controls
             [NotNullWhen(true)] out DragInfo? data,
             out TreeDataGridRowDropPosition position)
         {
+            // Try to get DragInfo ID from DataTransfer, then look up actual DragInfo
+            string? dragId = null;
+            foreach (var item in e.DataTransfer.Items)
+            {
+                dragId = item.TryGetRaw(DragInfo.DragFormat) as string;
+                if (dragId != null) break;
+            }
+
+            // Peek at the DragInfo without removing it (we might need it for multiple drop events)
+            DragInfo? di = null;
+            if (dragId != null && DragInfo._registry.TryGetValue(dragId, out di))
+            {
+                // Found it - don't remove yet
+            }
+
             if (!AutoDragDropRows ||
-                e.Data.Get(DragInfo.DataFormat) is not DragInfo di ||
+                di is null ||
                 _source is null ||
                 _source.IsSorted ||
                 targetRow is null ||

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <!-- TargetFramework inherited from Directory.Build.props (net8.0) -->
     <IsPackable>True</IsPackable>
     <RootNamespace>Avalonia.Controls</RootNamespace>
   </PropertyGroup>
