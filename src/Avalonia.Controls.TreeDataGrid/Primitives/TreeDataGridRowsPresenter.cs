@@ -1,5 +1,6 @@
 ﻿using System;
 using Avalonia.Controls.Models.TreeDataGrid;
+using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Selection;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
@@ -110,6 +111,62 @@ namespace Avalonia.Controls.Primitives
                 if (element is TreeDataGridRow { RowIndex: >= 0 } row)
                     row.UpdateSelection(selection);
             }
+        }
+
+        /// <summary>
+        /// Scrolls to ensure the row at the specified index is visible.
+        /// If the row is already visible, does nothing.
+        /// If the row is outside the viewport, scrolls to position it at the bottom of the visible area.
+        /// </summary>
+        /// <param name="rowIndex">The index of the row to scroll into view.</param>
+        /// <returns>True if scrolling occurred, false if row was already visible or index invalid.</returns>
+        public bool ScrollRowIntoViewAtBottom(int rowIndex)
+        {
+            if (Items is null || rowIndex < 0 || rowIndex >= Items.Count)
+                return false;
+
+            var scrollViewer = this.FindAncestorOfType<ScrollViewer>();
+            if (scrollViewer is null)
+                return false;
+
+            var viewportHeight = scrollViewer.Viewport.Height;
+            var scrollContentPresenter = scrollViewer.FindDescendantOfType<ScrollContentPresenter>();
+
+            // Check if row is already realized and visible
+            if (TryGetElement(rowIndex) is Control element && scrollContentPresenter != null)
+            {
+                var transform = element.TransformToVisual(scrollContentPresenter);
+                if (transform.HasValue)
+                {
+                    var rowBounds = new Rect(element.Bounds.Size).TransformToAABB(transform.Value);
+
+                    // If row is fully visible within the viewport, do nothing
+                    if (rowBounds.Top >= 0 && rowBounds.Bottom <= viewportHeight)
+                        return false;
+                }
+            }
+
+            // Row not visible or not realized - need to scroll
+            // First, realize the element to get its size
+            var scrollToElement = BringIntoView(rowIndex);
+            if (scrollToElement is null)
+                return false;
+
+            // Get the element's position within the scrollable content (not relative to viewport)
+            // The element's Bounds.Y gives its position within the parent (the presenter)
+            var rowTop = scrollToElement.Bounds.Top;
+            var rowHeight = scrollToElement.Bounds.Height;
+
+            // To position row at the bottom of viewport:
+            // We want: rowTop + rowHeight = scrollOffset + viewportHeight
+            // Therefore: scrollOffset = rowTop + rowHeight - viewportHeight
+            var targetScrollY = rowTop + rowHeight - viewportHeight;
+
+            // Clamp to valid range
+            targetScrollY = Math.Max(0, Math.Min(targetScrollY, scrollViewer.Extent.Height - viewportHeight));
+
+            scrollViewer.Offset = new Vector(scrollViewer.Offset.X, targetScrollY);
+            return true;
         }
 
         private void OnColumnLayoutInvalidated(object? sender, EventArgs e)
