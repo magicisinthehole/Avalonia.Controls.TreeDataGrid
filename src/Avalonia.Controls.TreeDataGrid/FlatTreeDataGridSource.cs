@@ -83,6 +83,13 @@ namespace Avalonia.Controls
 
         public event Action? Sorted;
 
+        /// <summary>
+        /// Optional callback for external sort handling (e.g., virtualized data sources).
+        /// When set, column header clicks invoke this callback instead of performing in-memory sorting.
+        /// The callback receives the column and sort direction.
+        /// </summary>
+        public Action<IColumn, ListSortDirection>? SortRequested { get; set; }
+
         public void Dispose()
         {
             (_rows as IDisposable)?.Dispose();
@@ -142,6 +149,19 @@ namespace Avalonia.Controls
                 if (!Columns.Contains(typedColumn))
                     return true;
 
+                // If external sort handler is set, use it instead of in-memory sorting
+                if (SortRequested != null)
+                {
+                    // Update column sort direction indicators
+                    foreach (var c in Columns)
+                        c.SortDirection = c == column ? direction : null;
+
+                    // Invoke external handler (e.g., for virtualized data sources)
+                    SortRequested.Invoke(column, direction);
+                    return true;
+                }
+
+                // Default: in-memory sorting via column comparison
                 var comparer = typedColumn.GetComparison(direction);
 
                 if (comparer is not null)
