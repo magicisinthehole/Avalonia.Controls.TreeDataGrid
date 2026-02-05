@@ -434,7 +434,6 @@ namespace Avalonia.Controls.Primitives
         protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
         {
             base.OnDetachedFromLogicalTree(e);
-            RecycleAllElements();
         }
 
         protected virtual void OnEffectiveViewportChanged(object? sender, EffectiveViewportChangedEventArgs e)
