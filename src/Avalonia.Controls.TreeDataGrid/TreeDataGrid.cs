@@ -9,6 +9,7 @@ using Avalonia.Controls.Selection;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.Utilities;
 using Avalonia.VisualTree;
@@ -23,8 +24,17 @@ namespace Avalonia.Controls
         public static readonly StyledProperty<bool> CanUserResizeColumnsProperty =
             AvaloniaProperty.Register<TreeDataGrid, bool>(nameof(CanUserResizeColumns), true);
 
+        public static readonly StyledProperty<bool> CanUserResizeColumnsInRowsProperty =
+            AvaloniaProperty.Register<TreeDataGrid, bool>(nameof(CanUserResizeColumnsInRows), true);
+
         public static readonly StyledProperty<bool> CanUserSortColumnsProperty =
             AvaloniaProperty.Register<TreeDataGrid, bool>(nameof(CanUserSortColumns), true);
+
+        public static readonly StyledProperty<bool> ShowColumnSeparatorsProperty =
+            AvaloniaProperty.Register<TreeDataGrid, bool>(nameof(ShowColumnSeparators), false);
+
+        public static readonly StyledProperty<IBrush?> ColumnSeparatorBrushProperty =
+            AvaloniaProperty.Register<TreeDataGrid, IBrush?>(nameof(ColumnSeparatorBrush));
 
         public static readonly DirectProperty<TreeDataGrid, IColumns?> ColumnsProperty =
             AvaloniaProperty.RegisterDirect<TreeDataGrid, IColumns?>(
@@ -113,6 +123,33 @@ namespace Avalonia.Controls
         {
             get => GetValue(CanUserResizeColumnsProperty);
             set => SetValue(CanUserResizeColumnsProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets whether users can resize columns by dragging the column borders in the rows area.
+        /// </summary>
+        public bool CanUserResizeColumnsInRows
+        {
+            get => GetValue(CanUserResizeColumnsInRowsProperty);
+            set => SetValue(CanUserResizeColumnsInRowsProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets whether to show vertical separator lines between columns.
+        /// </summary>
+        public bool ShowColumnSeparators
+        {
+            get => GetValue(ShowColumnSeparatorsProperty);
+            set => SetValue(ShowColumnSeparatorsProperty, value);
+        }
+
+        /// <summary>
+        /// Gets or sets the brush used to draw column separator lines.
+        /// </summary>
+        public IBrush? ColumnSeparatorBrush
+        {
+            get => GetValue(ColumnSeparatorBrushProperty);
+            set => SetValue(ColumnSeparatorBrushProperty, value);
         }
 
         public bool CanUserSortColumns

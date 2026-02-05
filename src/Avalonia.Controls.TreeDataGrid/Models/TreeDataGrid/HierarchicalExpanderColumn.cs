@@ -66,6 +66,7 @@ namespace Avalonia.Controls.Models.TreeDataGrid
         }
 
         public bool? CanUserResize => _inner.CanUserResize;
+        public bool? ShowSeparator => _inner.ShowSeparator;
         public object? Header => _inner.Header;
 
         public ListSortDirection? SortDirection

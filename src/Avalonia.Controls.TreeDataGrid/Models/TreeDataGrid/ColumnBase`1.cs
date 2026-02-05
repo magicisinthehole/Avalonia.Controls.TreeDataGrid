@@ -91,6 +91,7 @@ namespace Avalonia.Controls.Models.TreeDataGrid
         public object? Tag { get; set; }
 
         bool? IColumn.CanUserResize => Options.CanUserResizeColumn;
+        bool? IColumn.ShowSeparator => Options.ShowSeparator;
         double IUpdateColumnLayout.MinActualWidth => CoerceActualWidth(0);
         double IUpdateColumnLayout.MaxActualWidth => CoerceActualWidth(double.PositiveInfinity);
         bool IUpdateColumnLayout.StarWidthWasConstrained => _starWidthWasConstrained;

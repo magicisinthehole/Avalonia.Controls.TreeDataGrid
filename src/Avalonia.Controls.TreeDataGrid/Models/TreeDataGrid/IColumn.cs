@@ -47,5 +47,13 @@ namespace Avalonia.Controls.Models.TreeDataGrid
         /// Gets or sets a user-defined object attached to the column.
         /// </summary>
         object? Tag { get; set; }
+
+        /// <summary>
+        /// Gets a value indicating whether to show a separator line after this column.
+        /// </summary>
+        /// <remarks>
+        /// If null, the owner <see cref="TreeDataGrid.ShowColumnSeparators"/> property value will apply.
+        /// </remarks>
+        bool? ShowSeparator { get; }
     }
 }

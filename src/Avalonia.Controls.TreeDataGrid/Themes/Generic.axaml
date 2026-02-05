@@ -56,10 +56,17 @@
                 <ScrollViewer Name="PART_ScrollViewer"
                               HorizontalScrollBarVisibility="Auto"
                               BringIntoViewOnFocusChange="{TemplateBinding (ScrollViewer.BringIntoViewOnFocusChange)}">
-                  <TreeDataGridRowsPresenter Name="PART_RowsPresenter"
-                                             Columns="{TemplateBinding Columns}"
-                                             ElementFactory="{TemplateBinding ElementFactory}"
-                                             Items="{TemplateBinding Rows}" />
+                  <Grid>
+                    <TreeDataGridRowsPresenter Name="PART_RowsPresenter"
+                                               Columns="{TemplateBinding Columns}"
+                                               ElementFactory="{TemplateBinding ElementFactory}"
+                                               Items="{TemplateBinding Rows}"
+                                               CanUserResizeColumnsInRows="{TemplateBinding CanUserResizeColumnsInRows}" />
+                    <ColumnSeparatorOverlay Columns="{TemplateBinding Columns}"
+                                            ShowColumnSeparators="{TemplateBinding ShowColumnSeparators}"
+                                            ColumnSeparatorBrush="{TemplateBinding ColumnSeparatorBrush}"
+                                            IsHitTestVisible="False" />
+                  </Grid>
                 </ScrollViewer>
               </DockPanel>
             </Border>

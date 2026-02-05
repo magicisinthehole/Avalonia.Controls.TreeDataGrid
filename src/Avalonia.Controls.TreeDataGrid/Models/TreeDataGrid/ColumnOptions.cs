@@ -85,5 +85,13 @@ namespace Avalonia.Controls.Models.TreeDataGrid
         /// Gets or sets the gesture(s) that will cause a cell to enter edit mode.
         /// </summary>
         public BeginEditGestures BeginEditGestures { get; set; } = BeginEditGestures.Default;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to show a separator line after this column.
+        /// </summary>
+        /// <remarks>
+        /// If null, the owner <see cref="TreeDataGrid.ShowColumnSeparators"/> property value will apply.
+        /// </remarks>
+        public bool? ShowSeparator { get; set; }
     }
 }

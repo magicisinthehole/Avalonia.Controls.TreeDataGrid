@@ -2,8 +2,11 @@
 using Avalonia.Controls.Models.TreeDataGrid;
 using Avalonia.Controls.Presenters;
 using Avalonia.Controls.Selection;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.LogicalTree;
+using Avalonia.Utilities;
 using Avalonia.VisualTree;
 
 namespace Avalonia.Controls.Primitives
@@ -16,7 +19,15 @@ namespace Avalonia.Controls.Primitives
                 o => o.Columns,
                 (o, v) => o.Columns = v);
 
+        public static readonly StyledProperty<bool> CanUserResizeColumnsInRowsProperty =
+            AvaloniaProperty.Register<TreeDataGridRowsPresenter, bool>(nameof(CanUserResizeColumnsInRows), true);
+
+        private const double ResizeHitTestWidth = 5.0;
         private IColumns? _columns;
+        private int _resizingColumnIndex = -1;
+        private double _resizeStartX;
+        private double _resizeStartWidth;
+        private Cursor? _previousCursor;
 
         public event EventHandler<ChildIndexChangedEventArgs>? ChildIndexChanged;
 
@@ -24,6 +35,15 @@ namespace Avalonia.Controls.Primitives
         {
             get => _columns;
             set => SetAndRaise(ColumnsProperty, ref _columns, value);
+        }
+
+        /// <summary>
+        /// Gets or sets whether users can resize columns by dragging the column borders in the rows area.
+        /// </summary>
+        public bool CanUserResizeColumnsInRows
+        {
+            get => GetValue(CanUserResizeColumnsInRowsProperty);
+            set => SetValue(CanUserResizeColumnsInRowsProperty, value);
         }
 
         protected override Orientation Orientation => Orientation.Vertical;
@@ -167,6 +187,196 @@ namespace Avalonia.Controls.Primitives
 
             scrollViewer.Offset = new Vector(scrollViewer.Offset.X, targetScrollY);
             return true;
+        }
+
+        protected override void OnPointerMoved(PointerEventArgs e)
+        {
+            base.OnPointerMoved(e);
+
+            if (!CanUserResizeColumnsInRows || Columns is null)
+                return;
+
+            if (_resizingColumnIndex >= 0)
+            {
+                // Currently resizing - update column width
+                var currentX = e.GetPosition(this).X;
+                var delta = currentX - _resizeStartX;
+                var newWidth = Math.Max(0, _resizeStartWidth + delta);
+
+                if (!double.IsNaN(newWidth) && !double.IsInfinity(newWidth))
+                {
+                    var width = new GridLength(newWidth, GridUnitType.Pixel);
+                    Columns.SetColumnWidth(_resizingColumnIndex, width);
+                }
+                e.Handled = true;
+            }
+            else
+            {
+                // Check if we're near a column border
+                var columnIndex = GetColumnBorderAtPosition(e.GetPosition(this).X);
+                if (columnIndex >= 0 && CanResizeColumn(columnIndex))
+                {
+                    if (_previousCursor is null)
+                    {
+                        _previousCursor = Cursor;
+                        Cursor = new Cursor(StandardCursorType.SizeWestEast);
+                    }
+                }
+                else
+                {
+                    RestoreCursor();
+                }
+            }
+        }
+
+        protected override void OnPointerPressed(PointerPressedEventArgs e)
+        {
+            base.OnPointerPressed(e);
+
+            if (!CanUserResizeColumnsInRows || Columns is null)
+                return;
+
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            {
+                var x = e.GetPosition(this).X;
+                var columnIndex = GetColumnBorderAtPosition(x);
+
+                if (columnIndex >= 0 && CanResizeColumn(columnIndex))
+                {
+                    _resizingColumnIndex = columnIndex;
+                    _resizeStartX = x;
+                    _resizeStartWidth = Columns[columnIndex].ActualWidth;
+                    e.Pointer.Capture(this);
+                    e.Handled = true;
+                }
+            }
+        }
+
+        protected override void OnPointerReleased(PointerReleasedEventArgs e)
+        {
+            base.OnPointerReleased(e);
+
+            if (_resizingColumnIndex >= 0)
+            {
+                _resizingColumnIndex = -1;
+                e.Pointer.Capture(null);
+                RestoreCursor();
+                e.Handled = true;
+            }
+        }
+
+        protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
+        {
+            base.OnPointerCaptureLost(e);
+
+            if (_resizingColumnIndex >= 0)
+            {
+                _resizingColumnIndex = -1;
+                RestoreCursor();
+            }
+        }
+
+        protected override void OnPointerExited(PointerEventArgs e)
+        {
+            base.OnPointerExited(e);
+
+            if (_resizingColumnIndex < 0)
+            {
+                RestoreCursor();
+            }
+        }
+
+        protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            base.OnAttachedToVisualTree(e);
+            DoubleTapped += OnDoubleTapped;
+        }
+
+        protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+        {
+            DoubleTapped -= OnDoubleTapped;
+            base.OnDetachedFromVisualTree(e);
+        }
+
+        private void OnDoubleTapped(object? sender, TappedEventArgs e)
+        {
+            if (!CanUserResizeColumnsInRows || Columns is null)
+                return;
+
+            var x = e.GetPosition(this).X;
+            var columnIndex = GetColumnBorderAtPosition(x);
+
+            if (columnIndex >= 0 && CanResizeColumn(columnIndex))
+            {
+                // Double-tap on column border auto-sizes the column
+                Columns.SetColumnWidth(columnIndex, GridLength.Auto);
+                e.Handled = true;
+            }
+        }
+
+        /// <summary>
+        /// Gets the column index if the position is near the right edge of a column border.
+        /// </summary>
+        /// <param name="x">The X position relative to this control.</param>
+        /// <returns>The column index, or -1 if not near a border.</returns>
+        private int GetColumnBorderAtPosition(double x)
+        {
+            if (Columns is null)
+                return -1;
+
+            var columnX = 0.0;
+
+            for (var i = 0; i < Columns.Count; ++i)
+            {
+                var column = Columns[i];
+                var width = column.ActualWidth;
+
+                if (double.IsNaN(width))
+                    continue;
+
+                columnX += width;
+
+                // Check if x is within the hit test area at the right edge of this column
+                if (x >= columnX - ResizeHitTestWidth && x <= columnX + ResizeHitTestWidth)
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        /// <summary>
+        /// Checks if a column can be resized.
+        /// </summary>
+        private bool CanResizeColumn(int columnIndex)
+        {
+            if (Columns is null || columnIndex < 0 || columnIndex >= Columns.Count)
+                return false;
+
+            var column = Columns[columnIndex];
+
+            // Also check the parent TreeDataGrid's CanUserResizeColumns property
+            var treeDataGrid = this.FindAncestorOfType<TreeDataGrid>();
+            var gridAllowsResize = treeDataGrid?.CanUserResizeColumns ?? true;
+
+            // Check if the column allows user resizing (column.CanUserResize can be null, meaning defer to grid)
+            var columnAllowsResize = column.CanUserResize ?? gridAllowsResize;
+
+            return columnAllowsResize && gridAllowsResize;
+        }
+
+        private void RestoreCursor()
+        {
+            if (_previousCursor is not null)
+            {
+                Cursor = _previousCursor;
+                _previousCursor = null;
+            }
+            else if (Cursor?.ToString() == "SizeWestEast")
+            {
+                Cursor = Cursor.Default;
+            }
         }
 
         private void OnColumnLayoutInvalidated(object? sender, EventArgs e)
