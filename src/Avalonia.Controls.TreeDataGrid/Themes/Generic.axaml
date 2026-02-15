@@ -112,29 +112,30 @@
                     </Thumb.Template>
                   </Thumb>
                 </Panel>
-                <ContentPresenter Name="PART_ContentPresenter"
-                                  DockPanel.Dock="Left"
-                                  Content="{TemplateBinding Header}"
-                                  ContentTemplate="{TemplateBinding ContentTemplate}"
-                                  Padding="{TemplateBinding Padding}"
-                                  HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                  VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                                  TabIndex="0">
-                  <ContentPresenter.DataTemplates>
-                    <DataTemplate DataType="x:String">
-                      <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" />
-                    </DataTemplate>
-                  </ContentPresenter.DataTemplates>
-                </ContentPresenter>
-                <Path Name="SortIcon"
-                      DockPanel.Dock="Left"
-                      Fill="{TemplateBinding Foreground}"
-                      HorizontalAlignment="Left"
-                      VerticalAlignment="Center"
-                      Stretch="Uniform"
-                      Height="4"
-                      Margin="3,0,0,0"
-                      TabIndex="1" />
+                <DockPanel Margin="{TemplateBinding Padding}">
+                  <ContentPresenter Name="PART_ContentPresenter"
+                                    DockPanel.Dock="Left"
+                                    Content="{TemplateBinding Header}"
+                                    ContentTemplate="{TemplateBinding ContentTemplate}"
+                                    HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                    VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                    TabIndex="0">
+                    <ContentPresenter.DataTemplates>
+                      <DataTemplate DataType="x:String">
+                        <TextBlock Text="{Binding}" TextTrimming="CharacterEllipsis" />
+                      </DataTemplate>
+                    </ContentPresenter.DataTemplates>
+                  </ContentPresenter>
+                  <Path Name="SortIcon"
+                        DockPanel.Dock="Left"
+                        Fill="{TemplateBinding Foreground}"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Stretch="Uniform"
+                        Height="4"
+                        Margin="3,0,0,0"
+                        TabIndex="1" />
+                </DockPanel>
               </DockPanel>
             </Border>
           </ControlTemplate>
