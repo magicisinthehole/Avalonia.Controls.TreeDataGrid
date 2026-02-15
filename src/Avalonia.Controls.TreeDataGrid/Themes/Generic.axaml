@@ -27,8 +27,8 @@
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
 
-      <StreamGeometry x:Key="TreeDataGridSortIconDescendingPath">M1875 1011l-787 787v-1798h-128v1798l-787 -787l-90 90l941 941l941 -941z</StreamGeometry>
-      <StreamGeometry x:Key="TreeDataGridSortIconAscendingPath">M1965 947l-941 -941l-941 941l90 90l787 -787v1798h128v-1798l787 787z</StreamGeometry>
+      <StreamGeometry x:Key="TreeDataGridSortIconDescendingPath">M 0,0 L 4,5 L 8,0 Z</StreamGeometry>
+      <StreamGeometry x:Key="TreeDataGridSortIconAscendingPath">M 0,5 L 4,0 L 8,5 Z</StreamGeometry>
       <StreamGeometry x:Key="TreeDataGridItemCollapsedChevronPathData">M 1,0 10,10 l -9,10 -1,-1 L 8,10 -0,1 Z</StreamGeometry>
       <StreamGeometry x:Key="TreeDataGridItemExpandedChevronPathData">M0,1 L10,10 20,1 19,0 10,8 1,0 Z</StreamGeometry>
 
@@ -112,15 +112,8 @@
                     </Thumb.Template>
                   </Thumb>
                 </Panel>
-                <Path Name="SortIcon"
-                      DockPanel.Dock="Right"
-                      Fill="{TemplateBinding Foreground}"
-                      HorizontalAlignment="Center"
-                      VerticalAlignment="Center"
-                      Stretch="Uniform"
-                      Height="12"
-                      TabIndex="1" />
                 <ContentPresenter Name="PART_ContentPresenter"
+                                  DockPanel.Dock="Left"
                                   Content="{TemplateBinding Header}"
                                   ContentTemplate="{TemplateBinding ContentTemplate}"
                                   Padding="{TemplateBinding Padding}"
@@ -133,6 +126,15 @@
                     </DataTemplate>
                   </ContentPresenter.DataTemplates>
                 </ContentPresenter>
+                <Path Name="SortIcon"
+                      DockPanel.Dock="Left"
+                      Fill="{TemplateBinding Foreground}"
+                      HorizontalAlignment="Left"
+                      VerticalAlignment="Center"
+                      Stretch="Uniform"
+                      Height="4"
+                      Margin="3,0,0,0"
+                      TabIndex="1" />
               </DockPanel>
             </Border>
           </ControlTemplate>
