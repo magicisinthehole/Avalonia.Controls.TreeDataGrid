@@ -64,8 +64,7 @@
                                                CanUserResizeColumnsInRows="{TemplateBinding CanUserResizeColumnsInRows}" />
                     <ColumnSeparatorOverlay Columns="{TemplateBinding Columns}"
                                             ShowColumnSeparators="{TemplateBinding ShowColumnSeparators}"
-                                            ColumnSeparatorBrush="{TemplateBinding ColumnSeparatorBrush}"
-                                            IsHitTestVisible="False" />
+                                            ColumnSeparatorBrush="{TemplateBinding ColumnSeparatorBrush}" />
                   </Grid>
                 </ScrollViewer>
               </DockPanel>
