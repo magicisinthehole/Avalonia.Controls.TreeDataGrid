@@ -19,14 +19,16 @@ namespace Avalonia.Controls.Primitives
         public static readonly StyledProperty<IBrush?> ColumnSeparatorBrushProperty =
             AvaloniaProperty.Register<ColumnSeparatorOverlay, IBrush?>(nameof(ColumnSeparatorBrush));
 
-        private const double ColumnSeparatorWidth = 1.5;
+        public static readonly StyledProperty<double> ColumnSeparatorWidthProperty =
+            AvaloniaProperty.Register<ColumnSeparatorOverlay, double>(nameof(ColumnSeparatorWidth), 1.25);
 
         static ColumnSeparatorOverlay()
         {
             AffectsRender<ColumnSeparatorOverlay>(
                 ColumnsProperty,
                 ShowColumnSeparatorsProperty,
-                ColumnSeparatorBrushProperty);
+                ColumnSeparatorBrushProperty,
+                ColumnSeparatorWidthProperty);
         }
 
         /// <summary>
@@ -56,6 +58,12 @@ namespace Avalonia.Controls.Primitives
             set => SetValue(ColumnSeparatorBrushProperty, value);
         }
 
+        public double ColumnSeparatorWidth
+        {
+            get => GetValue(ColumnSeparatorWidthProperty);
+            set => SetValue(ColumnSeparatorWidthProperty, value);
+        }
+
         public override void Render(DrawingContext context)
         {
             base.Render(context);
@@ -65,7 +73,8 @@ namespace Avalonia.Controls.Primitives
 
             var treeDataGrid = this.FindAncestorOfType<TreeDataGrid>();
             var height = Bounds.Height;
-            var pen = new Pen(ColumnSeparatorBrush, ColumnSeparatorWidth);
+            var separatorWidth = ColumnSeparatorWidth;
+            var pen = new Pen(ColumnSeparatorBrush, separatorWidth);
             var x = 0.0;
 
             for (var i = 0; i < Columns.Count; ++i)
@@ -85,7 +94,7 @@ namespace Avalonia.Controls.Primitives
                 if (showSeparator && i < Columns.Count - 1) // Don't draw after last column
                 {
                     // Draw line centered on the column boundary
-                    var lineX = x - (ColumnSeparatorWidth / 2);
+                    var lineX = x - (separatorWidth / 2);
                     context.DrawLine(pen, new Point(lineX, 0), new Point(lineX, height));
                 }
             }
