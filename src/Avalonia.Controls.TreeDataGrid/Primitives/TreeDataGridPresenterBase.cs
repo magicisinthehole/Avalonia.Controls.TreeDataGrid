@@ -738,7 +738,39 @@ namespace Avalonia.Controls.Primitives
                     RecycleElementOnItemRemoved(_focusedElement);
             }
 
+            void ClearPendingScrollElement()
+            {
+                if (_scrollToElement is null)
+                    return;
+
+                // A pending scroll element can outlive the realized set when rows are reset/rebuilt.
+                // Recycle it if it's no longer tracked to avoid a visible orphan row.
+                var isRealized = _realizedElements?.GetIndex(_scrollToElement) >= 0;
+                if (!isRealized && _scrollToElement.IsVisible)
+                    RecycleElementOnItemRemoved(_scrollToElement);
+
+                _scrollToElement = null;
+                _scrollToIndex = -1;
+            }
+
+            void ClearDetachedFocusedElement()
+            {
+                if (_focusedElement is null)
+                    return;
+
+                // A parked focused element is returned directly by GetOrCreateElement without
+                // a new RealizeElement call, so stale DataContext can survive queue resets.
+                var isRealized = _realizedElements?.GetIndex(_focusedElement) >= 0;
+                if (!isRealized)
+                    RecycleElementOnItemRemoved(_focusedElement);
+            }
+
             InvalidateMeasure();
+
+            // Always clear parked special elements first, even when no rows are currently realized.
+            // Otherwise stale elements can be resurrected into a new item set.
+            ClearPendingScrollElement();
+            ClearDetachedFocusedElement();
 
             if (_realizedElements is null)
                 return;
