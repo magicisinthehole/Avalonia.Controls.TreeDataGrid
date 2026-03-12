@@ -240,11 +240,15 @@ namespace Avalonia.Controls.Models.TreeDataGrid
             if (_unsortedRows is null)
                 return;
 
-            void Add(int startIndex, int count)
+            void Add(int startIndex, IList items)
             {
-                // Add the new rows to the unsorted rows.
-                for (var i = startIndex; i < startIndex + count; ++i)
-                    _unsortedRows.Insert(i, CreateRow(i, _items[i]));
+                var count = items.Count;
+
+                // Add the new rows to the unsorted rows using items from the
+                // event args, avoiding a round-trip through the source indexer
+                // which can trigger unwanted page materialization.
+                for (var i = 0; i < count; ++i)
+                    _unsortedRows.Insert(startIndex + i, CreateRow(startIndex + i, (TModel)items[i]!));
                 
                 // Update the indexes of subsequent rows.
                 for (var i = startIndex + count; i < _unsortedRows.Count; ++i)
@@ -313,7 +317,7 @@ namespace Avalonia.Controls.Models.TreeDataGrid
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Add:
-                    Add(e.NewStartingIndex, e.NewItems!.Count);
+                    Add(e.NewStartingIndex, e.NewItems!);
                     break;
                 case NotifyCollectionChangedAction.Remove:
                     Remove(e.OldStartingIndex, e.OldItems!);
@@ -321,7 +325,7 @@ namespace Avalonia.Controls.Models.TreeDataGrid
                 case NotifyCollectionChangedAction.Replace:
                 case NotifyCollectionChangedAction.Move:
                     Remove(e.OldStartingIndex, e.OldItems!);
-                    Add(e.NewStartingIndex, e.NewItems!.Count);
+                    Add(e.NewStartingIndex, e.NewItems!);
                     break;
                 case NotifyCollectionChangedAction.Reset:
                     ResetRows();
@@ -334,7 +338,7 @@ namespace Avalonia.Controls.Models.TreeDataGrid
 
         private int CompareItemsByIndex(int index1, int index2)
         {
-            var c = _comparison!(_items[index1], _items[index2]);
+            var c = _comparison!(_unsortedRows![index1].Model, _unsortedRows![index2].Model);
 
             if (c == 0)
             {
