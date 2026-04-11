@@ -97,7 +97,7 @@ namespace Avalonia.Controls.Primitives
         {
             base.OnAttachedToLogicalTree(e);
 
-            if (ContentTemplate is null && DataContext is TemplateCell cell)
+            if (DataContext is TemplateCell cell)
             {
                 ContentTemplate = cell.GetCellTemplate(this);
                 EditingTemplate = cell.GetCellEditingTemplate?.Invoke(this);
@@ -109,18 +109,17 @@ namespace Avalonia.Controls.Primitives
             base.OnDataContextChanged(e);
             var cell = DataContext as TemplateCell;
 
-            // If DataContext is null, we're unrealized. Don't clear the content template for unrealized
-            // cells because this will mean that when the cell is realized again the template will need
-            // to be rebuilt, slowing everything down.
+            // Cells are recycled from a shared pool keyed only by visual type
+            // (TreeDataGridElementFactory.GetDataRecycleKey), so a cell may come back
+            // with a ContentTemplate belonging to a different column's FuncDataTemplate<T>.
+            // Always refresh the template from the current TemplateCell — setting the same
+            // reference is a no-op via SetAndRaise, so stable sources pay nothing while
+            // source swaps get correct behavior.
             if (cell is not null)
             {
                 Content = cell.Value;
-
-                if (((ILogical)this).IsAttachedToLogicalTree)
-                {
-                    ContentTemplate = cell.GetCellTemplate(this);
-                    EditingTemplate = cell.GetCellEditingTemplate?.Invoke(this);
-                }
+                ContentTemplate = cell.GetCellTemplate(this);
+                EditingTemplate = cell.GetCellEditingTemplate?.Invoke(this);
             }
             else
             {
