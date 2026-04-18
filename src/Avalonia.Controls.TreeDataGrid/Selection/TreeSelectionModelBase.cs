@@ -200,6 +200,26 @@ namespace Avalonia.Controls.Selection
 
         public void Select(IndexPath index) => Select(index, updateRangeAnchorIndex: false);
 
+        /// Selects a contiguous range of indices without accessing the backing items.
+        /// Use this for select-all on virtualized collections to avoid forcing
+        /// page materialization via TryGetItemAt.
+        public void SelectRange(int begin, int end)
+        {
+            if (begin > end || begin < 0) return;
+
+            using var update = BatchUpdate();
+            var o = update.Operation;
+
+            if (SingleSelect) return;
+
+            o.SelectedRanges ??= new();
+            o.SelectedRanges.Add(default, new IndexRange(begin, end));
+
+            if (o.SelectedIndex == default)
+                o.SelectedIndex = new IndexPath(begin);
+            o.AnchorIndex = new IndexPath(end);
+        }
+
         protected internal abstract IEnumerable<T>? GetChildren(T node);
         
         protected virtual bool TryGetItemAt(IndexPath index, out T? result)

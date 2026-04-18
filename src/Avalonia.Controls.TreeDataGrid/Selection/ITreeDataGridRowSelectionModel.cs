@@ -5,6 +5,7 @@ namespace Avalonia.Controls.Selection
 {
     public interface ITreeDataGridRowSelectionModel : ITreeSelectionModel, ITreeDataGridSelection
     {
+        void SelectRange(int begin, int end);
     }
 
     public interface ITreeDataGridRowSelectionModel<T> : ITreeDataGridRowSelectionModel
