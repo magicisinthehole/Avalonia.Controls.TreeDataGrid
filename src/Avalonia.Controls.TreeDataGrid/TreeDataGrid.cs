@@ -722,7 +722,10 @@ namespace Avalonia.Controls
 
             if (row != null)
             {
-                ShowDragAdorner(row, adorner);
+                var displayRow = row;
+                var displayPosition = adorner;
+                NormalizeAdornerToBefore(ref displayRow, ref displayPosition);
+                ShowDragAdorner(displayRow!, displayPosition);
             }
 
             if (Scroll is ScrollViewer scroller)
@@ -815,6 +818,25 @@ namespace Avalonia.Controls
         {
             RowsPresenter?.RecycleAllElements();
             RowsPresenter?.InvalidateMeasure();
+        }
+
+        // After-on-N and Before-on-(N+1) target the same gap; collapse to Before
+        // so the indicator doesn't visually jitter when the cursor crosses 50%.
+        private void NormalizeAdornerToBefore(
+            ref TreeDataGridRow? row,
+            ref TreeDataGridRowDropPosition position)
+        {
+            if (position != TreeDataGridRowDropPosition.After ||
+                row is null ||
+                _source is null ||
+                _source.IsHierarchical)
+                return;
+
+            if (RowsPresenter?.TryGetElement(row.RowIndex + 1) is TreeDataGridRow nextRow)
+            {
+                row = nextRow;
+                position = TreeDataGridRowDropPosition.Before;
+            }
         }
 
         private static TreeDataGridRowDropPosition GetDropPosition(
